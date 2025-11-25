@@ -4,7 +4,7 @@ subtitle: "Creating a Statistics Meme: Visualizing Selection Bias"
 format:
   html: default
 execute:
-  echo: true
+  echo: false
   eval: true
 ---
 
@@ -90,13 +90,12 @@ This exercise is fundamentally about **walking AI through a process** to create 
 
 ### Step 1: Load Your Images
 
-::: {.panel-tabset}
 
 ### Python
 
 ```{python}
 #| label: load-images
-#| echo: true
+#| echo: false
 #| eval: false
 
 import numpy as np
@@ -104,43 +103,19 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 # Load original image
-original_img = Image.open('your_image.jpg')
+original_img = Image.open('linkedin copy.jpeg')
 if original_img.mode != 'L':
     original_img = original_img.convert('L')
 original_array = np.array(original_img, dtype=np.float32) / 255.0
 
 # Load stippled image (from Part 1 - see https://flyaflya.github.io/stippleChallenge/)
+
 stipple_array = np.load('stippleImage.npy')
 
 print(f"Original: {original_array.shape}, Stipple: {stipple_array.shape}")
 ```
 
-### R
 
-```{r}
-#| label: load-images-r
-#| echo: true
-#| eval: false
-
-library(imager)
-
-# Load original image
-original_img <- load.image('your_image.jpg')
-if(dim(original_img)[3] == 3) {
-  original_img <- grayscale(original_img)
-}
-# Convert to matrix [h, w] and normalize
-arr <- as.array(original_img)
-original_array <- t(arr[,,1,1]) / max(arr)
-
-# Load stippled image (from Part 1 - see https://flyaflya.github.io/stippleChallenge/)
-# Adjust based on how you saved it - could be .RData, .rds, or regenerate
-# stipple_array <- readRDS('stippleImage.rds')
-
-cat("Original dimensions:", dim(original_array), "\n")
-```
-
-:::
 
 ### Step 2: Create the Block Letter "S"
 
@@ -154,6 +129,60 @@ Create a matrix matching your image dimensions with a bold letter "S" rendered a
 - Convert the result to a matrix with values in [0, 1] range (0.0 = black, 1.0 = white)
 - The "S" should be clearly visible and fill most of the image space
 
+```{python}
+#| label: create-s
+#| echo: false
+#| eval: false
+
+from PIL import Image, ImageDraw, ImageFont
+
+# Get image dimensions
+height, width = original_array.shape
+
+# Create a white background image matching the dimensions
+s_img = Image.new('L', (width, height), color=255)
+
+# Create a drawing context
+draw = ImageDraw.Draw(s_img)
+
+# Calculate font size (85% of image height)
+font_size = int(height * 0.85)
+
+# Try to use a bold font, fallback to default if not available
+try:
+    # Try Arial Bold first
+    font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", font_size)
+except:
+    try:
+        # Try DejaVu Sans Bold
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+    except:
+        # Fallback to default font
+        font = ImageFont.load_default()
+        # Scale default font if possible
+        try:
+            font = ImageFont.truetype(font.path, font_size)
+        except:
+            pass
+
+# Get text bounding box to center the "S"
+text = "S"
+bbox = draw.textbbox((0, 0), text, font=font)
+text_width = bbox[2] - bbox[0]
+text_height = bbox[3] - bbox[1]
+
+# Calculate position to center the text
+x = (width - text_width) / 2 - bbox[0]
+y = (height - text_height) / 2 - bbox[1]
+
+# Draw the "S" in black (0 = black in grayscale)
+draw.text((x, y), text, fill=0, font=font)
+
+# Convert to numpy array and normalize to [0, 1] range
+# 0.0 = black, 1.0 = white (PIL uses 0=black, 255=white, so dividing by 255 gives us the right range)
+s_matrix = np.array(s_img, dtype=np.float32) / 255.0
+```
+
 ### Step 3: Create the Masked Estimate
 
 Your stippled image is a matrix where black dots (0.0) represent data points and white (1.0) is background. The "S" matrix shows where selection bias occurs (black "S" = missing data). To create the masked estimate, remove stipple points (set to white) wherever the "S" is black.
@@ -165,6 +194,21 @@ Your stippled image is a matrix where black dots (0.0) represent data points and
 - Where the "S" is white, keep the original stipple values
 - This creates the visual effect of "missing data" in the shape of the "S"
 - Use conditional assignment or boolean masking (e.g., `np.where()` in Python, `ifelse()` in R)
+
+```{python}
+#| label: create-masked-estimate
+#| echo: false
+#| eval: false
+
+# Create a binary mask: pixels < 0.5 are part of the black "S" (where selection bias occurs)
+# In s_matrix: 0.0 = black "S", 1.0 = white background
+s_mask = s_matrix < 0.5
+
+# Apply the mask to the stippled image:
+# - Where the "S" is black (s_mask is True), remove stipples by setting to white (1.0)
+# - Where the "S" is white (s_mask is False), keep the original stipple values
+masked_estimate = np.where(s_mask, 1.0, stipple_array)
+```
 
 ### Step 4: Assemble the Four-Panel Meme
 
@@ -179,7 +223,47 @@ Use the image composition capabilities of matplotlib (Python) or imager (R) to a
 - Consider a light background color (like pink) to make panels stand out
 - Save with high DPI (150-300) for quality output
 - In Python: use `plt.subplots()` and `imshow()` for each panel
-- In R: use `par(mfrow = ...)` and `plot()` with imager's `as.cimg()` to convert matrices
+
+```{python}
+#| label: assemble-meme
+#| echo: false
+#| eval: false
+
+# Create a 1×4 layout (horizontal panels)
+fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+
+# Set figure background to light pink to make panels stand out
+fig.patch.set_facecolor('#FFE5E5')
+# Set subplot background to light pink as well
+for ax in axes:
+    ax.set_facecolor('#FFE5E5')
+
+# List of matrices and their labels
+panels = [
+    (original_array, "Reality"),
+    (stipple_array, "Your Model"),
+    (s_matrix, "Selection Bias"),
+    (masked_estimate, "Estimate")
+]
+
+# Display each panel
+for ax, (matrix, label) in zip(axes, panels):
+    # Display as grayscale image
+    ax.imshow(matrix, cmap='gray', vmin=0, vmax=1)
+    # Add label above the panel
+    ax.set_title(label, fontsize=14, fontweight='bold', pad=10)
+    # Remove axes ticks and labels for clean look
+    ax.axis('off')
+
+# Add small padding around panels to show pink background
+# This makes the pink background visible and helps panels stand out
+plt.subplots_adjust(wspace=0.02, hspace=0, left=0.01, right=0.99, top=0.9, bottom=0.05)
+
+# Save the meme with high DPI and light pink background
+plt.savefig('statistics_meme.png', dpi=200, bbox_inches='tight', 
+            facecolor='#FFE5E5', edgecolor='none')
+plt.close()
+```
 
 ## Tips for Success
 
