@@ -8,90 +8,9 @@ execute:
   eval: true
 ---
 
-# 🎨 Selection Bias & Missing Data Challenge - Part 2
-
-::: {.callout-important}
-## 📊 Challenge Requirements
-
-**Your Task:** Create a four-panel statistics meme demonstrating selection bias using your original image and stippled version from [Part 1](https://flyaflya.github.io/stippleChallenge/).
-
-**Prerequisites:** Completed [Part 1](https://flyaflya.github.io/stippleChallenge/) with:
-
-1. Your original image file
-2. Your stippled image (numpy array or R matrix)
-3. Image dimensions (height and width)
-
-**Deliverables:**
-
-1. Four-panel meme (1×4 or 2×2 layout) with labels: Reality, Your Model, Selection Bias, Estimate
-2. Code (Python or R) that generates the meme
-3. GitHub Pages site named "statsMemeChallenge" with your meme and explanation
-
-**Repository Information:**
-
-- **Source/Starter File:** Available in the main repository at [https://github.com/flyaflya/statsMemeChallenge](https://github.com/flyaflya/statsMemeChallenge)
-- **Challenge Read Online:** View the challenge instructions at [https://flyaflya.github.io/statsMemeChallenge](https://flyaflya.github.io/statsMemeChallenge)
-- **Your Submission:** Fork this challenge and create your GitHub Pages site at `https://[your-username].github.io/statsMemeChallenge/`
-:::
-
-## The Problem: Visualizing Selection Bias
-
-Selection bias occurs when observed data isn't representative of the population. Your meme will show:
-
-- **Reality**: Your original image (truth)
-- **Your Model**: Your stippled image (representation)
-- **Selection Bias**: A bold letter "S" (systematic missing data pattern)
-- **Estimate**: Stippled image with "S" mask applied (biased estimate)
-
-**Key Concept:** Images are simply matrices—2D arrays where each value represents a pixel (0.0 = black, 1.0 = white). Your stippled image is a matrix with black dots (data points) on a white background. Selection bias removes some of these pixels (data points) in a systematic pattern (the "S"), creating a biased estimate. You'll use image composition tools (matplotlib in Python, imager in R) to arrange these matrices into a memorable visualization.
-
 ## Exemplar
 
 ![Exemplar statistics meme showing the four-panel structure: Reality (original image), Your Model (stippled version), Selection Bias (letter S), and Estimate (masked stippled image)](statistics_meme.png)
-
-**Your Goal:** Recreate this structure using **your own** original and stippled images from [Part 1](https://flyaflya.github.io/stippleChallenge/).
-
-## Why This Matters
-
-This exercise is fundamentally about **walking AI through a process** to create valuable output. You're not just coding—you're collaborating with AI to transform abstract statistical concepts into a memorable visual artifact. The meme you create will serve as a mental anchor: whenever you think about selection bias in the future, you'll ask yourself: **"Does my sample match my population of interest?"** This visualization will stick with you for the rest of your life, making it easier to recognize and address selection bias in real-world data analysis.
-
-## Getting Started: Repository Setup 🚀
-
-::: {.callout-important}
-## 📁 Repository Setup Instructions
-
-**Step 1:** Fork the starter repository:
-
-- Navigate to [https://github.com/flyaflya/statsMemeChallenge](https://github.com/flyaflya/statsMemeChallenge)
-- Fork the repository to your GitHub account (this creates `https://github.com/[your-username]/statsMemeChallenge`)
-
-**Step 2:** Clone your forked repository locally using Cursor (or VS Code)
-
-**Step 3:** Set up GitHub Pages:
-
-- Go to your repository settings (click the "Settings" tab in your GitHub repository)
-- Scroll down to the "Pages" section in the left sidebar
-- Under "Source", select "Deploy from a branch"
-- Choose "main" branch and "/ (root)" folder
-- Click "Save"
-- Your site will be available at: `https://[your-username].github.io/statsMemeChallenge/`
-- **Note:** It may take a few minutes for the site to become available after enabling Pages
-
-**Step 4:** You're ready to start! Use the `index.qmd` file as your starting point.
-:::
-
-## Implementation Guide
-
-::: {.callout-important}
-## 📝 Code Visibility in Final HTML
-
-**Important:** When you create your final `index.qmd` file, use `echo: false` for all code chunks that generate the meme. The rendered HTML should show only the meme image and your explanation, not the code. The code should still be in the `.qmd` file (so it can be rendered), but it won't be displayed in the HTML output.
-:::
-
-### Step 1: Load Your Images
-
-
-### Python
 
 ```{python}
 #| label: load-images
@@ -116,18 +35,6 @@ print(f"Original: {original_array.shape}, Stipple: {stipple_array.shape}")
 ```
 
 
-
-### Step 2: Create the Block Letter "S"
-
-Create a matrix matching your image dimensions with a bold letter "S" rendered as black pixels on a white background.
-
-**Hints:**
-
-- Use image drawing libraries to render text (PIL/Pillow in Python, `magick` in R)
-- Create a white background matrix matching your image dimensions (height × width)
-- Render a bold letter "S" centered in the image (try 80-90% of image height for font size)
-- Convert the result to a matrix with values in [0, 1] range (0.0 = black, 1.0 = white)
-- The "S" should be clearly visible and fill most of the image space
 
 ```{python}
 #| label: create-s
@@ -183,17 +90,7 @@ draw.text((x, y), text, fill=0, font=font)
 s_matrix = np.array(s_img, dtype=np.float32) / 255.0
 ```
 
-### Step 3: Create the Masked Estimate
 
-Your stippled image is a matrix where black dots (0.0) represent data points and white (1.0) is background. The "S" matrix shows where selection bias occurs (black "S" = missing data). To create the masked estimate, remove stipple points (set to white) wherever the "S" is black.
-
-**Hints:**
-
-- Create a binary mask by thresholding the "S" image (e.g., pixels < 0.5 are part of the "S")
-- Apply the mask to your stippled image: where the "S" is black, set those pixels to white (1.0)
-- Where the "S" is white, keep the original stipple values
-- This creates the visual effect of "missing data" in the shape of the "S"
-- Use conditional assignment or boolean masking (e.g., `np.where()` in Python, `ifelse()` in R)
 
 ```{python}
 #| label: create-masked-estimate
@@ -210,19 +107,7 @@ s_mask = s_matrix < 0.5
 masked_estimate = np.where(s_mask, 1.0, stipple_array)
 ```
 
-### Step 4: Assemble the Four-Panel Meme
 
-Use the image composition capabilities of matplotlib (Python) or imager (R) to arrange your four matrices as panels in a single figure.
-
-**Hints:**
-
-- Create a multi-panel layout (1×4 for horizontal, 2×2 for grid)
-- Display each matrix as a grayscale image: original, stippled, "S", and masked stippled
-- Add clear labels: "Reality", "Your Model", "Selection Bias", "Estimate"
-- Use minimal spacing between panels for a clean, professional look
-- Consider a light background color (like pink) to make panels stand out
-- Save with high DPI (150-300) for quality output
-- In Python: use `plt.subplots()` and `imshow()` for each panel
 
 ```{python}
 #| label: assemble-meme
@@ -265,48 +150,9 @@ plt.savefig('statistics_meme.png', dpi=200, bbox_inches='tight',
 plt.close()
 ```
 
-## Tips for Success
+## Explanation
 
-1. **Font Selection**: Use bold fonts (Arial Bold, DejaVu Sans Bold) for the "S"
-2. **Threshold Tuning**: Adjust `threshold` (typically 0.5) for clean mask edges
-3. **Spacing**: Minimize gaps between panels (`wspace=0`, `hspace=0`)
-4. **Background**: Light pink background helps panels stand out
-5. **Save Quality**: Use DPI 150-300 for crisp output
-6. **Layout Choice**: 1×4 for wide images, 2×2 for square/tall images
+Selection bias occurs when observed data isn't representative of the population. The meme that I created shows selection bias by masking the stipples with the bolded "S" letter. This represents the systematic missing data pattern that is not representative of the population. In the end result, the estimate had a "S" letter covering the models' stipples since the selection bias that was represented by the bolded "S" letter was masked.
 
-## Submission Requirements
 
-**Important:** Your final GitHub Pages site should be a clean, professional presentation that focuses on the meme and explanation, not the code.
 
-**Repository Contents:**
-
-- [ ] `index.qmd` file with your code to generate the meme
-- [ ] Any supporting code files (Python `.py` files or R scripts) that your `index.qmd` references
-- [ ] Your original image and stippled image files (or `.npy`/`.rds` files) needed to generate the meme
-- [ ] Rendered HTML output (generated by rendering the `index.qmd` file)
-
-**HTML Output Requirements:**
-
-- [ ] **Code should NOT be visible** in the rendered HTML (use `echo: false` for code chunks that generate the meme)
-- [ ] The HTML should display **only the four-panel meme image**
-- [ ] Include a **brief explanation** of selection bias and how your meme demonstrates it
-- [ ] Professional, clean presentation suitable for sharing
-
-**Submission Checklist:**
-
-- [ ] All four panels: Reality, Your Model, Selection Bias, Estimate
-- [ ] Clear labels on each panel
-- [ ] Bold, properly-sized "S" letter
-- [ ] Masked estimate correctly removes stipples within "S"
-- [ ] Clean layout with minimal spacing
-- [ ] Code runs without errors and generates the meme
-- [ ] `index.qmd` file in repository with `echo: false` for meme generation code
-- [ ] Supporting code files (if any) included in repository
-- [ ] Document rendered to HTML successfully (meme generated, code hidden)
-- [ ] HTML files uploaded to your repository
-- [ ] GitHub Pages enabled and working
-- [ ] Site accessible at `https://[your-username].github.io/statsMemeChallenge/`
-- [ ] Final site shows only the meme and explanation (no visible code)
-- [ ] Brief explanation of selection bias included in HTML
-
-**Remember:** Create a memorable, educational visualization that helps others understand selection bias. This is about more than completing an assignment—it's about building a lasting understanding through creative collaboration with AI.
