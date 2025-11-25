@@ -8,7 +8,7 @@ execute:
   eval: true
 ---
 
-## Exemplar
+## Final Meme
 
 ![Exemplar statistics meme showing the four-panel structure: Reality (original image), Your Model (stippled version), Selection Bias (letter S), and Estimate (masked stippled image)](statistics_meme.png)
 
